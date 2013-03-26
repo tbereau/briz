@@ -1,1 +1,1 @@
-__all__ = ["ssh"]
+__all__ = ["ssh", "charmm"]
