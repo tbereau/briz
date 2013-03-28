@@ -180,7 +180,7 @@ class RunCommandRemotely:
 		numprocsub = ""
 		depend     = ""
 		if int(numProc) > 1:
-			numprocsub = self.numprocflag + " " + numProc
+			numprocsub = self.numprocflag + " " + str(numProc)
 			if int(numProc) >= self.queuespecn:
 				queuesub = "-q " + self.queuespec
 		if dependID > 0:
@@ -209,6 +209,9 @@ class RunCommandRemotely:
 		else:
 			print "Error. grep of " + jobName + " returned too many results."
 			self.die()
+
+	def delRemoteDir(self):
+		self.execCmd("rm -rf " + self.remdir)
 
 	def getStdin(self):
 		return self.stdin.readlines()
