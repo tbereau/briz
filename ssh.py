@@ -3,6 +3,7 @@
 import ConfigParser
 import paramiko
 import os
+import time
 
 class RunCommandRemotely:
 	'''Run remote command on server'''
@@ -37,7 +38,13 @@ class RunCommandRemotely:
 		self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 		# Connect to remote server, choose directory, and create working directory
-		self.chooseDir()
+		self.overwrite   = True
+		if self.subdir != "":
+			self.overwrite = False
+		self.chooseDir(overwrite=self.overwrite)
+
+	def getDir(self):
+		return self.remdir
 
 	def die(self):
 		for line in self.stdout.readlines():
@@ -55,7 +62,7 @@ class RunCommandRemotely:
 		if hasattr(self.ssh,"is_active"):
 			self.ssh.close()
 
-	def chooseDir(self):
+	def chooseDir(self, overwrite=False):
 		'''Determine unused directory on remote server'''
 		self.connectSSH()
 
@@ -64,23 +71,24 @@ class RunCommandRemotely:
 			dirCounter = 0
 			dirName = ''
 			while freeDir is False:
-				dirName = "dir%06d" % dirCounter
+				dirName = "dir%03d" % dirCounter
 				sin, sout, serr = self.ssh.exec_command( "find " + 
 					self.workdir + " -maxdepth 1 -name " + dirName + " | wc -l")
 				stat = sout.channel.recv_exit_status()
 				if sout.readlines()[0].strip() == "0":
 					freeDir = True
 				dirCounter += 1
-				if dirCounter > 999999:
+				if dirCounter > 999:
 					print "No free directory in",self.workdir
 					exit(1)
 			self.subdir   = dirName
 		else:
-			# If folder already exists, move it to .bak
-			self.execCmd( "rm -rf " + self.workdir 
-				+ "/" + self.subdir + ".bak")
-			self.execCmd( "mv " + self.workdir + "/" + self.subdir 
-				+ " " + self.workdir + "/" + self.subdir + ".bak")
+			if overwrite is True:
+				# If folder already exists, move it to .bak
+				self.execCmd( "rm -rf " + self.workdir 
+					+ "/" + self.subdir + ".bak")
+				self.execCmd( "mv " + self.workdir + "/" + self.subdir 
+					+ " " + self.workdir + "/" + self.subdir + ".bak")
 		self.remdir   = self.workdir + "/" + self.subdir
 		self.execCmd("mkdir -p " + self.remdir)
 		self.disconnectSSH()
@@ -90,18 +98,11 @@ class RunCommandRemotely:
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
 		destFile = self.remdir + "/" + baseFile
-		trials = 0
-		statSuccess = False
-		while trials < self.maxtrials and statSuccess == False:
-			try:
-				self.sftp.stat(destFile)
-			except:
-				trials += 1
-				continue
-			break
-		if trials == self.maxtrials:
+		try:
+			self.sftp.stat(destFile)
+			return True
+		except:
 			return False
-		return True
 
 	def localFileExists(self, myFile):
 		baseFile = myFile
@@ -121,8 +122,10 @@ class RunCommandRemotely:
 		while trials < self.maxtrials and putSuccess == False:
 			try:
 				self.sftp.put(oriFile, destFile)
+				putSuccess = True
 			except:
 				trials += 1
+				time.sleep(1)
 				continue
 			break
 		if trials == self.maxtrials:
@@ -141,8 +144,10 @@ class RunCommandRemotely:
 		while trials < self.maxtrials and getSuccess == False:
 			try:
 				self.sftp.get(remFile, self.locdir + "/" + baseFile)
+				getSuccess = True
 			except:
 				trials += 1
+				time.sleep(1)
 				continue
 			break
 		if trials == self.maxtrials:
@@ -151,7 +156,7 @@ class RunCommandRemotely:
 		# print "copied",baseFile,"from the remote server"
 		return
 
-	def delFile(self, myFile):
+	def delFile(self, myFile, force=False):
 		baseFile = myFile
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
@@ -161,8 +166,13 @@ class RunCommandRemotely:
 		while trials < self.maxtrials and delSuccess == False:
 			try:
 				self.sftp.remove(remFile)
+				delSuccess = True
 			except:
 				trials += 1
+				time.sleep(1)
+				if force == False:
+					print "Warning: couldn't delete remote file",remFile
+					delSuccess = True
 				continue
 			break
 		if trials == self.maxtrials:
@@ -185,10 +195,18 @@ class RunCommandRemotely:
 				queuesub = "-q " + self.queuespec
 		if dependID > 0:
 			depend = "-hold_jid " + str(dependID)
-		status = self.execCmd("qsub -S /bin/sh -cwd -N " + jobName \
-			+ " -j y " + numprocsub + " " + queuesub + " " + depend \
-			+ " -o " + self.remdir + "/" + jobName + ".log " + inpCmd)
-		if status != 0:
+		trials = 0
+		subSuccess = False
+		while trials < self.maxtrials and subSuccess == False:
+			status = self.execCmd("qsub -S /bin/sh -cwd -N " + jobName \
+				+ " -j y " + numprocsub + " " + queuesub + " " + depend \
+				+ " -o " + self.remdir + "/" + jobName + ".log " + inpCmd)
+			if status == 0:
+				subSuccess = True
+			else:
+				trials += 1
+				time.sleep(1)
+		if subSuccess is False:
 			print "Error: qsub submission failed. Error code", status
 			self.die()
 		# Return job ID

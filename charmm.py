@@ -15,8 +15,8 @@ class RunCharmmRemotely(ssh.RunCommandRemotely):
 		self.charmmOut = outFile
 		return \
 '''#!/bin/bash
-#$ -m a
-#$ -M %s
+## -m a
+##-M %s
 
 input=%s
 output=%s
