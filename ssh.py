@@ -19,6 +19,7 @@ class RunCommandRemotely:
 		self.workdir     = self.config.get(server, 'workdir')
 		self.subdir      = subdir
 		self.remdir      = ''
+		self.subsubdir   = ''
 		self.pkeyfile    = os.path.expanduser('~/.ssh/id_rsa')
 		self.mykey       = paramiko.RSAKey.from_private_key_file(
 			self.pkeyfile)
@@ -52,6 +53,15 @@ class RunCommandRemotely:
 		for line in self.stderr.readlines():
 			print line
 		exit(1)
+
+	def setSubSubDir(self, subSubDir):
+		# Only allow relative paths. Die if subDir starts with "/"
+		if subSubDir[0] == "/":
+			print "Error. createSubSubDir only allows relative paths:",subSubDir
+			exit(1)
+		self.execCmd("mkdir -p " + self.remdir + "/" + subSubDir)
+		self.subsubdir = subSubDir
+		return
 
 	def connectSSH(self):
 		if hasattr(self.ssh,"is_active") is False:
@@ -97,7 +107,7 @@ class RunCommandRemotely:
 		baseFile = myFile
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
-		destFile = self.remdir + "/" + baseFile
+		destFile = self.remdir + "/" + self.subsubdir + "/" + baseFile
 		try:
 			self.sftp.stat(destFile)
 			return True
@@ -115,7 +125,7 @@ class RunCommandRemotely:
 		baseFile = myFile
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
-		destFile = self.remdir + "/" + baseFile
+		destFile = self.remdir + "/" + self.subsubdir + "/" + baseFile
 		oriFile = os.path.abspath(myFile)
 		trials = 0
 		putSuccess = False
@@ -138,7 +148,7 @@ class RunCommandRemotely:
 		baseFile = myFile
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
-		remFile = self.remdir + "/" + baseFile
+		remFile = self.remdir + "/" + self.subsubdir + "/" + baseFile
 		trials = 0
 		getSuccess = False
 		while trials < self.maxtrials and getSuccess == False:
@@ -160,7 +170,7 @@ class RunCommandRemotely:
 		baseFile = myFile
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
-		remFile = self.remdir + "/" + baseFile
+		remFile = self.remdir + "/" + self.subsubdir + "/" + baseFile
 		trials = 0
 		delSuccess = False
 		while trials < self.maxtrials and delSuccess == False:
@@ -200,7 +210,8 @@ class RunCommandRemotely:
 		while trials < self.maxtrials and subSuccess == False:
 			status = self.execCmd("qsub -S /bin/sh -cwd -N " + jobName \
 				+ " -j y " + numprocsub + " " + queuesub + " " + depend \
-				+ " -o " + self.remdir + "/" + jobName + ".log " + inpCmd)
+				+ " -o " + self.remdir + "/" + self.subsubdir + "/" + jobName \
+				+ ".log " + inpCmd)
 			if status == 0:
 				subSuccess = True
 			else:
@@ -228,8 +239,11 @@ class RunCommandRemotely:
 			print "Error. grep of " + jobName + " returned too many results."
 			self.die()
 
-	def delRemoteDir(self):
+	def delRemoteSubDir(self):
 		self.execCmd("rm -rf " + self.remdir)
+
+	def delRemoteSubSubDir(self):
+		self.execCmd("rm -rf " + self.remdir + "/" + self.subsubdir)
 
 	def getStdin(self):
 		return self.stdin.readlines()

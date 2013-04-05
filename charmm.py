@@ -10,13 +10,24 @@ class RunCharmmRemotely(ssh.RunCommandRemotely):
 		self.charmmOut = ""
 		self.subjobs   = []
 
-	def generateCharmmJob(self, inpFile, outFile):
+	def generateCharmmJob(self, inpFile, outFile, otherInpDir="", email=False):
 		self.charmmInp = inpFile
 		self.charmmOut = outFile
+		emailString    = ""
+		if email is True:
+			emailString = "#$ -m a\n#$ -M %s" % \
+				self.config.get('misc','email')
+		copyOtherInpDir    = ""
+		if otherInpDir != "":
+			otherDir = ""
+			if otherInpDir[0] == "/":
+				otherDir = otherInpDir
+			else:
+				otherDir = self.remdir + "/" + otherInpDir
+			copyOtherInpDir = "cp -r %s $tempdir" % otherDir
 		return \
 '''#!/bin/bash
-## -m a
-##-M %s
+%s
 
 input=%s
 output=%s
@@ -25,6 +36,7 @@ mkdir -p $tempdir
 oridir=%s
 
 cp -r $oridir/* $tempdir/
+%s
 cd $tempdir
 mpirun=%s
 charmm=%s
@@ -37,9 +49,9 @@ fi
 cd $oridir
 mv $tempdir/* $oridir
 rmdir $tempdir
-''' % (self.config.get('misc','email'), self.charmmInp, self.charmmOut,
-	self.config.get(self.server, 'scratchdir'), self.remdir,
-	self.config.get(self.server,'mpirun'),
+''' % (emailString, self.charmmInp, self.charmmOut,
+	self.config.get(self.server, 'scratchdir'), self.remdir + "/" self.subsubdir,
+	copyOtherInpDir, self.config.get(self.server,'mpirun'),
 	self.config.get(self.server, 'charmm'))
 
 	def remoteSimulationTerminatedNormally(self, myFile):
@@ -48,7 +60,7 @@ rmdir $tempdir
 		baseFile = myFile
 		if baseFile.find("/") != -1:
 			baseFile = myFile[myFile.rfind("/")+1:]
-		remFile = self.remdir + "/" + baseFile
+		remFile = self.remdir + "/" + self.subsubdir + "/" + baseFile
 		try:
 			f = self.sftp.open(remFile,'r')
 			s = f.readlines()
