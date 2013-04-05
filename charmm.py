@@ -50,7 +50,7 @@ cd $oridir
 mv $tempdir/* $oridir
 rmdir $tempdir
 ''' % (emailString, self.charmmInp, self.charmmOut,
-	self.config.get(self.server, 'scratchdir'), self.remdir + "/" self.subsubdir,
+	self.config.get(self.server, 'scratchdir'), self.remdir + "/" + self.subsubdir,
 	copyOtherInpDir, self.config.get(self.server,'mpirun'),
 	self.config.get(self.server, 'charmm'))
 
