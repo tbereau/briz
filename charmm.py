@@ -24,7 +24,7 @@ class RunCharmmRemotely(ssh.RunCommandRemotely):
 				otherDir = otherInpDir
 			else:
 				otherDir = self.remdir + "/" + otherInpDir
-			copyOtherInpDir = "cp -r %s $tempdir" % otherDir
+			copyOtherInpDir = "cp -r %s/* $tempdir" % otherDir
 		return \
 '''#!/bin/bash
 %s
