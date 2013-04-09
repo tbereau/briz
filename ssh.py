@@ -228,6 +228,17 @@ class RunCommandRemotely:
 	def jobIsRunning(self, jobName):
 		if jobName == "":
 			return False
+		# Has the job experienced an error when running the script? Look for "Eqw"
+		# status.
+		self.execCmd("qstat | grep " + self.username + " | grep " \
+			+ str(jobName) + " | grep Eqw | wc -l")
+		numLines = int(len(self.stdout.readlines()))
+		if numLines == 1:
+			# Delete this job
+			self.execCmd("qdel " + str(jobName))
+			# We return true in case another instance of this job is currently
+			# running. This will be checked during the next call to this routine.
+			return True
 		self.execCmd("qstat | grep " + self.username + " | grep " \
 			+ str(jobName) + " | wc -l")
 		numLines = int(len(self.stdout.readlines()))
