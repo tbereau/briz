@@ -1,5 +1,7 @@
 '''Misc routines'''
 
+import os
+
 def readInFromFile(fileName):
   '''Read in fileName and output string containing whole content.'''
   try:
@@ -37,4 +39,11 @@ def writeOutToFile(array, fileName):
   for i in range(len(array)):
     f.write(str(array[i]) + "\n")
   f.close()
+  return 
+
+def assertProgramIsReachable(progName):  
+  '''Assert that program progName is reachable on local machine.'''
+  if os.system("type " + progName + " > /dev/null") != 0:
+      print "# Error. Can't find " + progName + " on local machine."
+      exit(1)
   return 
