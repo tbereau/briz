@@ -49,7 +49,7 @@ def writeOutToFile2D(array1, array2, fileName):
     exit(1)
   f = open(fileName,'w')
   for i in range(len(array1)):
-    f.write(str(array1[i]) + "\t" str(array2[i]) + "\n")
+    f.write(str(array1[i]) + "\t" + str(array2[i]) + "\n")
   f.close()
   return
 
