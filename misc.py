@@ -42,6 +42,17 @@ def writeOutToFile(array, fileName):
   f.close()
   return 
 
+def writeOutToFile2D(array1, array2, fileName):
+  '''Write out array1 and array2 to file fileName.'''
+  if len (array1) != len(array2):
+    print "# Error. Can't write to file: Arrays of different sizes."
+    exit(1)
+  f = open(fileName,'w')
+  for i in range(len(array1)):
+    f.write(str(array1[i]) + "\t" str(array2[i]) + "\n")
+  f.close()
+  return
+
 def assertProgramIsReachable(progName):  
   '''Assert that program progName is reachable on local machine.'''
   if os.system("type " + progName + " > /dev/null") != 0:
