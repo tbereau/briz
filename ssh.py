@@ -264,6 +264,7 @@ class RunCommandRemotely:
     # Return job ID
     self.execCmd("qstat | grep " + self.username + " | grep " \
       + jobName[:10] + " | awk '{print $" + self.quejobidcol + "}'")
+    time.sleep(2)
     return int(self.stdout.readlines()[0].split()[0]) 
 
   def jobIsRunning(self, jobName):
