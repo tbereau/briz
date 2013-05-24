@@ -253,7 +253,7 @@ class RunCommandRemotely:
     while trials < self.maxtrials and subSuccess == False:
       status = self.execCmd("qsub -S /bin/sh -cwd -N " + jobName \
         + " -j y " + numprocsub + " " + queuesub + " " + depend \
-        + " -o " + self.logdir + "/" + jobName + ".log " 
+        + " -o " + self.joblog + "/" + jobName + ".log " 
         + inpCmd)
       if status == 0:
         subSuccess = True
@@ -315,7 +315,7 @@ class RunCommandRemotely:
     return self.stderr.readlines()
 
   def __del__(self):
-    self.execCmd("rm -f " + self.logdir + "/*.log")
+    self.execCmd("rm -f " + self.joblog + "/*.log")
     self.disconnectSSH()
 
 
