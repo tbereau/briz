@@ -108,7 +108,7 @@ class RunCommandRemotely:
           + " " + self.workdir + "/" + self.subdir + ".bak")
     self.remdir   = self.workdir + "/" + self.subdir
     self.execCmd("mkdir -p " + self.remdir)
-    self.execCmd("mkdir -p " + self.logdir)
+    self.execCmd("mkdir -p " + self.joblog)
     self.disconnectSSH()
 
   def remoteFileExists(self, myFile):
