@@ -251,8 +251,9 @@ class RunCommandRemotely:
     while trials < self.maxtrials and subSuccess == False:
       status = self.execCmd("qsub -S /bin/sh -cwd -N " + jobName \
         + " -j y " + numprocsub + " " + queuesub + " " + depend \
-        + " -o " + self.remdir + "/" + self.subsubdir + "/" + jobName \
-        + ".log " + inpCmd)
+        # + " -o " + self.remdir + "/" + self.subsubdir + "/" + jobName \
+        # + ".log " 
+        + inpCmd)
       if status == 0:
         subSuccess = True
       else:
