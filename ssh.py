@@ -37,6 +37,7 @@ class RunCommandRemotely:
     self.queuespec   = self.config.get(server, 'queuespec' )
     self.queuespecn  = self.config.get(server, 'queuespecn')
     self.quejobidcol = self.config.get(server, 'quejobidcol')
+    self.joblog      = "logdir"
 
     self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -107,6 +108,7 @@ class RunCommandRemotely:
           + " " + self.workdir + "/" + self.subdir + ".bak")
     self.remdir   = self.workdir + "/" + self.subdir
     self.execCmd("mkdir -p " + self.remdir)
+    self.execCmd("mkdir -p " + self.logdir)
     self.disconnectSSH()
 
   def remoteFileExists(self, myFile):
@@ -251,8 +253,7 @@ class RunCommandRemotely:
     while trials < self.maxtrials and subSuccess == False:
       status = self.execCmd("qsub -S /bin/sh -cwd -N " + jobName \
         + " -j y " + numprocsub + " " + queuesub + " " + depend \
-        # + " -o " + self.remdir + "/" + self.subsubdir + "/" + jobName \
-        # + ".log " 
+        + " -o " + self.logdir + "/" + jobName + ".log " 
         + inpCmd)
       if status == 0:
         subSuccess = True
@@ -314,6 +315,7 @@ class RunCommandRemotely:
     return self.stderr.readlines()
 
   def __del__(self):
+    self.execCmd("rm -f " + self.logdir + "/*.log")
     self.disconnectSSH()
 
 
