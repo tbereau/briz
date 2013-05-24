@@ -315,7 +315,6 @@ class RunCommandRemotely:
     return self.stderr.readlines()
 
   def __del__(self):
-    self.execCmd("rm -f " + self.joblog + "/*.log")
     self.disconnectSSH()
 
 
