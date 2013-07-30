@@ -244,7 +244,7 @@ class RunCommandRemotely:
     depend     = ""
     if int(numProc) > 1:
       numprocsub = self.numprocflag + " " + str(numProc)
-      if int(numProc) >= self.queuespecn:
+      if int(numProc) >= int(self.queuespecn):
         queuesub = "-q " + self.queuespec
     if dependID > 0:
       depend = "-hold_jid " + str(dependID)
