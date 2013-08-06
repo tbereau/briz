@@ -43,6 +43,7 @@ oridir=%s
 cp -r $oridir/* $tempdir/
 %s
 cd $tempdir
+%s
 mpirun=%s
 charmm=%s
 if [  "$NSLOTS" -gt 1 ]; then
@@ -56,7 +57,8 @@ mv $tempdir/* $oridir
 rmdir $tempdir
 ''' % (emailString, self.charmmInp, self.charmmOut,
   self.config.get(self.server, 'scratchdir'), self.remdir + "/" + self.subsubdir,
-  copyOtherInpDir, self.config.get(self.server,'mpirun'),
+  copyOtherInpDir, self.config.get(self.server,'module'), 
+  self.config.get(self.server,'mpirun'),
   self.config.get(self.server, 'charmm'))
 
   def remoteSimulationTerminatedNormally(self, myFile):
