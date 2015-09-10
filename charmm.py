@@ -15,10 +15,14 @@ class RunCharmmRemotely(ssh.RunCommandRemotely):
     misc.assertProgramIsReachable('catdcd')
 
 
-  def generateCharmmJob(self, inpFile, outFile, otherInpDir="", email=False):
+  def generateCharmmJob(self, inpFile, outFile, otherInpDir="",
+    noMPI=False, email=False):
     self.charmmInp = inpFile
     self.charmmOut = outFile
     emailString    = ""
+    nslots=""
+    if noMPI:
+        nslots="NSLOTS=1"
     if email is True:
       emailString = "#$ -m a\n#$ -M %s" % \
         self.config.get('misc','email')
@@ -42,6 +46,7 @@ oridir=%s
 
 cp -r $oridir/* $tempdir/
 %s
+%s
 cd $tempdir
 %s
 mpirun=%s
@@ -57,7 +62,7 @@ mv $tempdir/* $oridir
 rmdir $tempdir
 ''' % (emailString, self.charmmInp, self.charmmOut,
   self.config.get(self.server, 'scratchdir'), self.remdir + "/" + self.subsubdir,
-  copyOtherInpDir, self.config.get(self.server,'module'), 
+  copyOtherInpDir, nslots, self.config.get(self.server,'module'),
   self.config.get(self.server,'mpirun'),
   self.config.get(self.server, 'charmm'))
 
